@@ -1,21 +1,16 @@
 # queues.py
 
 from collections import deque
-from queue import Queue
+from heapq import heappop, heappush
 
-class Stack(Queue):
-    def __init__(self, *elements):
-        self._elements = deque(elements)
+# ...
 
-    def __len__(self):
-        return len(self._elements)
+class PriorityQueue:
+    def __init__(self):
+        self._elements = []
 
-    def __iter__(self):
-        while len(self) > 0:
-            yield self.dequeue()
-
-    def enqueue(self, element):
-        self._elements.append(element)
+    def enqueue_with_priority(self, priority, value):
+        heappush(self._elements, (priority, value))
 
     def dequeue(self):
-        return self._elements.pop()
+        return heappop(self._elements)
