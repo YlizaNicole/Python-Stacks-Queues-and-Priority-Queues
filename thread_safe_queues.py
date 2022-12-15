@@ -5,6 +5,9 @@ from queue import LifoQueue, PriorityQueue, Queue
 import threading
 from time import sleep
 from random import choice, randint
+from dataclasses import dataclass, field
+from enum import IntEnum
+
 
 
 QUEUE_TYPES = {
@@ -30,6 +33,25 @@ PRODUCTS = (
     ":teddy_bear:",
     ":thread:",
     ":yo-yo:",
+)
+
+@dataclass(order=True)
+class Product:
+    priority: int
+    label: str = field(compare=False)
+
+    def __str__(self):
+        return self.label
+
+class Priority(IntEnum):
+    HIGH = 1
+    MEDIUM = 2
+    LOW = 3
+
+PRIORITIZED_PRODUCTS = (
+    Product(Priority.HIGH, ":1st_place_medal:"),
+    Product(Priority.MEDIUM, ":2nd_place_medal:"),
+    Product(Priority.LOW, ":3rd_place_medal:"),
 )
 
 class Worker(threading.Thread):
