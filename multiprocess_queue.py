@@ -1,15 +1,15 @@
 # multiprocess_queue.py
 
-import time
-from hashlib import md5
-from itertools import product
-from string import ascii_lowercase
-import multiprocessing
-from dataclasses import dataclass
 import argparse
+import multiprocessing
 import queue
+import time
+from dataclasses import dataclass
+from hashlib import md5
+from string import ascii_lowercase
 
 POISON_PILL = None
+
 
 class Combinations:
     def __init__(self, alphabet, length):
@@ -29,6 +29,7 @@ class Combinations:
             for i in reversed(range(self.length))
         )
 
+
 @dataclass(frozen=True)
 class Job:
     combinations: Combinations
@@ -42,13 +43,6 @@ class Job:
             if hashed == hash_value:
                 return text_bytes.decode("utf-8")
 
-def reverse_md5(hash_value, alphabet=ascii_lowercase, max_length=6):
-    for length in range(1, max_length + 1):
-        for combination in Combinations(alphabet, length):
-            text_bytes = "".join(combination).encode("utf-8")
-            hashed = md5(text_bytes).hexdigest()
-            if hashed == hash_value:
-                return text_bytes.decode("utf-8")
 
 class Worker(multiprocessing.Process):
     def __init__(self, queue_in, queue_out, hash_value):
@@ -66,6 +60,7 @@ class Worker(multiprocessing.Process):
             if plaintext := job(self.hash_value):
                 self.queue_out.put(plaintext)
                 break
+
 
 def main(args):
     t1 = time.perf_counter()
@@ -91,14 +86,15 @@ def main(args):
     while any(worker.is_alive() for worker in workers):
         try:
             solution = queue_out.get(timeout=0.1)
-            t2 = time.perf_counter()
             if solution:
+                t2 = time.perf_counter()
                 print(f"{solution} (found in {t2 - t1:.1f}s)")
                 break
         except queue.Empty:
             pass
     else:
         print("Unable to find a solution")
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -112,6 +108,7 @@ def parse_args():
     )
     return parser.parse_args()
 
+
 def chunk_indices(length, num_chunks):
     start = 0
     while num_chunks > 0:
@@ -120,6 +117,7 @@ def chunk_indices(length, num_chunks):
         yield start, (start := start + chunk_size)
         length -= chunk_size
         num_chunks -= 1
+
 
 if __name__ == "__main__":
     main(parse_args())
