@@ -2,22 +2,31 @@
 
 import argparse
 import asyncio
-from collections import Counter
-from urllib.parse import urljoin
-from bs4 import BeautifulSoup
 import sys
+from collections import Counter
 from typing import NamedTuple
+from urllib.parse import urljoin
+
 import aiohttp
+from bs4 import BeautifulSoup
+
 
 class Job(NamedTuple):
     url: str
     depth: int = 1
 
+    def __lt__(self, other):
+        if isinstance(other, Job):
+            return len(self.url) < len(other.url)
+
+
 async def main(args):
     session = aiohttp.ClientSession()
     try:
         links = Counter()
-        queue = asyncio.LifoQueue()
+        queue = asyncio.Queue()
+        # queue = asyncio.LifoQueue()
+        # queue = asyncio.PriorityQueue()
         tasks = [
             asyncio.create_task(
                 worker(
@@ -60,10 +69,12 @@ async def worker(worker_id, session, queue, links, max_depth):
         finally:
             queue.task_done()
 
+
 async def fetch_html(session, url):
     async with session.get(url) as response:
         if response.ok and response.content_type == "text/html":
             return await response.text()
+
 
 def parse_links(url, html):
     soup = BeautifulSoup(html, features="html.parser")
@@ -72,6 +83,7 @@ def parse_links(url, html):
         if not href.startswith("javascript:"):
             yield urljoin(url, href)
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("url")
@@ -79,9 +91,11 @@ def parse_args():
     parser.add_argument("-w", "--num-workers", type=int, default=3)
     return parser.parse_args()
 
+
 def display(links):
     for url, count in links.most_common():
         print(f"{count:>3} {url}")
+
 
 if __name__ == "__main__":
     asyncio.run(main(parse_args()))
